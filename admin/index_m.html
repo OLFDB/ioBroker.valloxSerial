@@ -68,7 +68,7 @@
 			<div class="col s12">
 				<ul class="tabs">
 					<li class="tab col s5 m4"><a href="#tab-main" class="translate active">Main settings</a></li>
-					<li class="tab col s5 m4"><a href="#tab-advanced" class="translate">Advanced settings</a></li>
+					<li class="tab col s5 m4"><a href="#tab-logging" class="translate">Log settings</a></li>
 				</ul>
 			</div>
 
@@ -86,15 +86,49 @@
 					<span class="translate">Absolute path to serial port device address</span>
 				</div>
 
+				<div class="input-field col s12">
+					<select class="value" id="controlUnitAddress">
+						<option value="Panel_1" class="translate">Panel 1</option>
+						<option value="Panel_2" class="translate">Panel 2</option>
+						<option value="Panel_3" class="translate">Panel 3</option>
+						<option value="Panel_4" class="translate">Panel 4</option>
+						<option value="Panel_5" class="translate">Panel 5</option>
+						<option value="Panel_6" class="translate">Panel 6</option>
+						<option value="Panel_7" class="translate">Panel 7</option>
+						<option value="Panel_8" class="translate">Panel 8</option>
+						<option value="Panel_9" class="translate">Panel 9</option>
+					</select>
+					<label for="controlUnitAddress" class="translate">Send commands with this address (two control units/panels with same address cause bus failure)</label>
+				</div>
+
 			</div>
 
-			<!-- TAB: Advanced settings -->
-			<div id="tab-main" class="col s12 page">
+			<!-- TAB: Log settings -->
+			<div id="tab-logging" class="col s12 page">
                 <div class="input-field col s12">
-					<input type="checkbox" class="value" id="debugLogDatagrams" />
-					<label for="debugLogDatagrams" class="translate">Log datagrams</label>
-					<span class="translate">If set, all datagrams are logged with level debug.</span>
-                </div>
+					<input type="checkbox" class="value" id="logSerialPortEvents" />
+					<label for="logSerialPortEvents" class="translate">Log serial port events</label>
+					<span class="translate">If set, uncritical serial port events are logged (info level).</span>
+				</div>
+				<div class="input-field col s12">
+					<select class="value" id="loglevelDatagrams">
+						<option value="Off" class="translate">Off</option>
+						<option value="Silly" class="translate">Silly</option>
+						<option value="Debug" class="translate">Debug</option>
+						<option value="Info" class="translate">Info</option>
+					</select>
+					<label for="loglevelDatagrams" class="translate">Datagrams are logged with the given loglevel</label>
+				</div>
+				<div class="input-field col s12">
+					<input type="checkbox" class="value" id="logAllReadingsForStateChange" />
+					<label for="logAllReadingsForStateChange" class="translate">Log all readings</label>
+					<span class="translate">If set, all value readings that might lead to a state change are logged (info level).</span>
+				</div>
+				<div class="input-field col s12">
+					<input type="checkbox" class="value" id="logEventHandlers" />
+					<label for="logEventHandlers" class="translate">Log event handler calls</label>
+					<span class="translate">If set, all calls of top-level event handlers are logged (info level).</span>
+				</div>
 
 			</div>
 

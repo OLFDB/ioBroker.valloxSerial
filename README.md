@@ -122,6 +122,9 @@ The module folder contains a shell script `start-remote-debugging.sh` that start
 * Currently we don't handle field code 0xA4 (Heating setpoint). Need to validate if that's just a response to a panel's request.
 
 ## Changelog
+### 0.0.2 (2020-05-27)
+* news
+
  
 ### 0.0.1
 * (mld18) initial release

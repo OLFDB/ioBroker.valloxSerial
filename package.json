@@ -1,11 +1,8 @@
 {
   "name": "iobroker.valloxserial",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "iobroker Adapter for Vallox ventilation units with legacy RS-485 serial interfaces",
-  "author": {
-    "name": "Author",
-    "email": "github@markus-dechert.de"
-  },
+  "author": "Author <github@markus-dechert.de>",
   "homepage": "https://github.com/mld18/ioBroker.valloxSerial",
   "license": "MIT",
   "keywords": [
@@ -16,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mld18/ioBroker.valloxSerial"
+    "url": "git+https://github.com/mld18/ioBroker.valloxSerial.git"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^2.2.1"
@@ -87,5 +84,8 @@
   "bugs": {
     "url": "https://github.com/mld18/ioBroker.valloxSerial/issues"
   },
-  "readmeFilename": "README.md"
+  "directories": {
+    "doc": "doc",
+    "test": "test"
+  }
 }

@@ -1,378 +1,92 @@
 {
-	"common": {
-		"name": "valloxserial",
-		"version": "0.0.1",
-		"news": {
-			"0.0.1": {
-				"en": "Initial Release",
-				"de": "Erstveröffentlichung"
-			}
-		},
-		"title": "Vallox SE serial",
-		"titleLang": {
-			"en": "Vallox SE Serial via RS-485 Adapater",
-			"de": "Vallox SE Serial via RS-485 Adapater"
-		},
-		"desc": {
-			"en": "Adapter to read and change settings of Vallox ventilation units of type SE via the legacy RS-485 based serial protocol.",
-			"de": "Adapter zum Lesen und Ändern der Einstellungen von Vallox KWL-Anlagen des Typs SE über das RS-485-basierte serielle Protokoll."
-		},
-		"authors": [
-			"Markus L. Dechert <github@markus-dechert.de>"
-		],
-		"keywords": [
-			"ioBroker",
-			"Vallox",
-			"RS485",
-			"home automation"
-		],
-		"license": "MIT",
-		"platform": "Javascript/Node.js",
-		"main": "build/main.js",
-		"icon": "valloxserial.png",
-		"enabled": true,
-		"extIcon": "https://raw.githubusercontent.com/mld18/ioBroker.valloxSerial/master/admin/valloxserial.png",
-		"readme": "https://github.com/mld18/ioBroker.valloxSerial/blob/master/README.md",
-		"loglevel": "info",
-		"mode": "daemon",
-		"type": "climate-control",
-		"compact": true,
-		"materialize": true,
-		"materializeTab": true,
-		"adminTab": {
-			"singleton": true,
-			"name": {
-				"en": "Vallox SE serial",
-				"de": "Vallox SE serial"
-			},
-			"link": "",
-			"fa-icon": "info"
-		},
-		"supportCustoms": true,
-		"dependencies": [
-			{
-				"js-controller": ">=1.4.2"
-			}
-		]
-	},
-	"native": {
-		"serialPortDevice": "/dev/ttyUSB0",
-		"loglevelDatagrams": "Debug",
-		"logSerialPortEvents": false,
-		"logEventHandlers": false,
-		"logAllReadingsForStateChange": false,
-		"controlUnitAddress": "Panel_2"
-	},
-	"objects": [],
-	"instanceObjects": [
-		{
+    "common": {
+        "name": "valloxserial",
+        "version": "0.0.2",
+        "news": {
+            "0.0.2": {
+                "en": "news",
+                "de": "neues",
+                "ru": "новое",
+                "pt": "novidades",
+                "nl": "nieuws",
+                "fr": "nouvelles",
+                "it": "notizie",
+                "es": "noticias",
+                "pl": "nowości",
+                "zh-cn": "新"
+            },
+            "0.0.1": {
+                "en": "Initial Release",
+                "de": "Erstveröffentlichung"
+            }
+        },
+        "title": "Vallox SE serial",
+        "titleLang": {
+            "en": "Vallox SE Serial via RS-485 Adapater",
+            "de": "Vallox SE Serial via RS-485 Adapater"
+        },
+        "desc": {
+            "en": "Adapter to read and change settings of Vallox ventilation units of type SE via the legacy RS-485 based serial protocol.",
+            "de": "Adapter zum Lesen und Ändern der Einstellungen von Vallox KWL-Anlagen des Typs SE über das RS-485-basierte serielle Protokoll."
+        },
+        "authors": [
+            "Markus L. Dechert <github@markus-dechert.de>"
+        ],
+        "keywords": [
+            "ioBroker",
+            "Vallox",
+            "RS485",
+            "home automation"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "build/main.js",
+        "icon": "valloxserial.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/mld18/ioBroker.valloxSerial/master/admin/valloxserial.png",
+        "readme": "https://github.com/mld18/ioBroker.valloxSerial/blob/master/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "climate-control",
+        "compact": true,
+        "materialize": true,
+        "materializeTab": true,
+        "adminTab": {
+            "singleton": true,
+            "name": {
+                "en": "Vallox SE serial",
+                "de": "Vallox SE serial"
+            },
+            "link": "",
+            "fa-icon": "info"
+        },
+        "supportCustoms": true,
+        "dependencies": [
+            {
+                "js-controller": ">=1.4.2"
+            }
+        ]
+    },
+    "native": {
+        "serialPortDevice": "/dev/ttyUSB0",
+        "loglevelDatagrams": "Debug",
+        "logSerialPortEvents": false,
+        "logEventHandlers": false,
+        "logAllReadingsForStateChange": false,
+        "controlUnitAddress": "Panel_2"
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
             "_id": "Commands",
             "type": "channel",
             "common": {
                 "role": "button",
-				"name": "",
-				"desc": "Contains all commands to submit settings to the ventilation unit"
+                "name": "",
+                "desc": "Contains all commands to submit settings to the ventilation unit"
             }
-		},
-		{
-            "_id": "Readings",
-            "type": "channel",
-            "common": {
-                "role": "Readings",
-				"name": "",
-				"desc": "Contains all values send to operator panels as read-only states"
-            }
-		},
-		{
-            "_id": "Readings.power",
-            "type": "state",
-            "common": {
-                "name": "Power",
-                "type": "boolean",
-                "role": "switch.power",
-                "read": true,
-				"write": false,
-				"desc": "Power state (on/off)",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x01",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.co2Adjust",
-            "type": "state",
-            "common": {
-                "name": "CO2 adjust",
-                "type": "boolean",
-                "role": "info.display",
-                "read": true,
-				"write": false,
-				"desc": "CO2 adjust state",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x02",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.humidityAdjust",
-            "type": "state",
-            "common": {
-                "name": "Humidity adjust",
-                "type": "boolean",
-                "role": "info.display",
-                "read": true,
-				"write": false,
-				"desc": "% relative humidity adjust state",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x04",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.heating",
-            "type": "state",
-            "common": {
-                "name": "Heating",
-                "type": "boolean",
-                "role": "info.display",
-                "read": true,
-				"write": false,
-				"desc": "Heating state",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x08",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.filterguard",
-            "type": "state",
-            "common": {
-                "name": "Filterguard",
-                "type": "boolean",
-                "role": "info.display",
-                "read": true,
-				"write": false,
-				"desc": "Filterguard indicator",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x10",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.heatingIndicator",
-            "type": "state",
-            "common": {
-                "name": "Heating indicator",
-                "type": "boolean",
-                "role": "info.display",
-                "read": true,
-				"write": false,
-				"desc": "Heating indicator",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x20",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.error",
-            "type": "state",
-            "common": {
-                "name": "Error",
-                "type": "boolean",
-                "role": "indicator.maintenance.alarm",
-                "read": true,
-				"write": false,
-				"desc": "Error indicator",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x40",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.serviceReminder",
-            "type": "state",
-            "common": {
-                "name": "Service reminder",
-                "type": "boolean",
-                "role": "indicator.maintenance",
-                "read": true,
-				"write": false,
-				"desc": "Service reminder",
-				"custom": {
-					"fieldCodes": ["0xA3"],
-					"fieldBitPattern": "0x80",
-					"encoding": "onOff"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.fanSpeed",
-            "type": "state",
-            "common": {
-                "name": "Fan speed",
-                "type": "number",
-                "role": "level",
-                "read": true,
-				"write": false,
-				"min": 0,
-				"max": 8,
-				"desc": "Fan speed is discretely indicated by a level between 1 and 8",
-				"custom": {
-					"fieldCodes": ["0x29"],
-					"encoding": "fanSpeed"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.humidity",
-            "type": "state",
-            "common": {
-                "name": "Current relative humidity",
-                "type": "number",
-                "role": "value.humidity",
-                "read": true,
-				"write": false,
-				"unit": "%",
-				"desc": "",
-				"custom": {
-					"fieldCodes": ["0x2A"],
-					"encoding": "humidity"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.co2Level",
-            "type": "state",
-            "common": {
-                "name": "Current level of CO2",
-                "type": "number",
-                "role": "level.co2",
-                "read": true,
-				"write": false,
-				"unit": "%",
-				"desc": "Last measured amount of CO2",
-				"custom": {
-					"fieldCodes": ["0x2B", "0x2C"]
-				}				
-            }
-		},
-		{
-            "_id": "Readings.humiditySensor1",
-            "type": "state",
-            "common": {
-                "name": "%RH from sensor 1",
-                "type": "number",
-                "role": "value.humidity",
-                "read": true,
-				"write": false,
-				"unit": "%",
-				"desc": "Percentage of relative humidity from sensor 1",
-				"custom": {
-					"fieldCodes": ["0x2F"],
-					"encoding": "humidity"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.humiditySensor2",
-            "type": "state",
-            "common": {
-                "name": "%RH from sensor 2",
-                "type": "number",
-                "role": "value.humidity",
-                "read": true,
-				"write": false,
-				"unit": "%",
-				"desc": "Percentage of relative humidity from sensor 2",
-				"custom": {
-					"fieldCodes": ["0x30"],
-					"encoding": "humidity"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.outsideTemperature",
-            "type": "state",
-            "common": {
-                "name": "Outside temperature",
-                "type": "number",
-                "role": "value.temperature",
-                "read": true,
-				"write": false,
-				"unit": "°C",
-				"desc": "Measured temperature from outside air duct",
-				"custom": {
-					"fieldCodes": ["0x32"],
-					"encoding": "temperature"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.exhaustTemperature",
-            "type": "state",
-            "common": {
-                "name": "Exhaust temperature",
-                "type": "number",
-                "role": "value.temperature",
-                "read": true,
-				"write": false,
-				"unit": "°C",
-				"desc": "Measured temperature from exhaust air duct",
-				"custom": {
-					"fieldCodes": ["0x33"],
-					"encoding": "temperature"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.insideTemperature",
-            "type": "state",
-            "common": {
-                "name": "Inside temperature",
-                "type": "number",
-                "role": "value.temperature",
-                "read": true,
-				"write": false,
-				"unit": "°C",
-				"desc": "Measured temperature from inside air duct",
-				"custom": {
-					"fieldCodes": ["0x34"],
-					"encoding": "temperature"
-				}				
-            }
-		},
-		{
-            "_id": "Readings.incomingTemperature",
-            "type": "state",
-            "common": {
-                "name": "Incoming temperature",
-                "type": "number",
-                "role": "value.temperature",
-                "read": true,
-				"write": false,
-				"unit": "°C",
-				"desc": "Measured temperature from incoming air duct",
-				"custom": {
-					"fieldCodes": ["0x35"],
-					"encoding": "temperature"
-				}				
-			}
-		},
-		{
+        },
+        {
             "_id": "Commands.setFanSpeed",
             "type": "state",
             "common": {
@@ -380,15 +94,350 @@
                 "type": "number",
                 "role": "level",
                 "read": false,
-				"write": true,
-				"min": 0,
-				"max": 8,
-				"desc": "Fan speed is discretely indicated by a level between 1 and 8",
-				"custom": {
-					"fieldCodes": ["0x29"],
-					"encoding": "fanSpeed"
-				}				
+                "write": true,
+                "min": 0,
+                "max": 8,
+                "desc": "Fan speed is discretely indicated by a level between 1 and 8",
+                "custom": {
+                    "fieldCodes": [
+                        "0x29"
+                    ],
+                    "encoding": "fanSpeed"
+                }
             }
-		}
-	]
+        },
+        {
+            "_id": "Readings",
+            "type": "channel",
+            "common": {
+                "role": "Readings",
+                "name": "",
+                "desc": "Contains all values send to operator panels as read-only states"
+            }
+        },
+        {
+            "_id": "Readings.power",
+            "type": "state",
+            "common": {
+                "name": "Power",
+                "type": "boolean",
+                "role": "switch.power",
+                "read": true,
+                "write": false,
+                "desc": "Power state (on/off)",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x01",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.co2Adjust",
+            "type": "state",
+            "common": {
+                "name": "CO2 adjust",
+                "type": "boolean",
+                "role": "info.display",
+                "read": true,
+                "write": false,
+                "desc": "CO2 adjust state",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x02",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.humidityAdjust",
+            "type": "state",
+            "common": {
+                "name": "Humidity adjust",
+                "type": "boolean",
+                "role": "info.display",
+                "read": true,
+                "write": false,
+                "desc": "% relative humidity adjust state",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x04",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.heating",
+            "type": "state",
+            "common": {
+                "name": "Heating",
+                "type": "boolean",
+                "role": "info.display",
+                "read": true,
+                "write": false,
+                "desc": "Heating state",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x08",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.filterguard",
+            "type": "state",
+            "common": {
+                "name": "Filterguard",
+                "type": "boolean",
+                "role": "info.display",
+                "read": true,
+                "write": false,
+                "desc": "Filterguard indicator",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x10",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.heatingIndicator",
+            "type": "state",
+            "common": {
+                "name": "Heating indicator",
+                "type": "boolean",
+                "role": "info.display",
+                "read": true,
+                "write": false,
+                "desc": "Heating indicator",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x20",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.error",
+            "type": "state",
+            "common": {
+                "name": "Error",
+                "type": "boolean",
+                "role": "indicator.maintenance.alarm",
+                "read": true,
+                "write": false,
+                "desc": "Error indicator",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x40",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.serviceReminder",
+            "type": "state",
+            "common": {
+                "name": "Service reminder",
+                "type": "boolean",
+                "role": "indicator.maintenance",
+                "read": true,
+                "write": false,
+                "desc": "Service reminder",
+                "custom": {
+                    "fieldCodes": [
+                        "0xA3"
+                    ],
+                    "fieldBitPattern": "0x80",
+                    "encoding": "onOff"
+                }
+            }
+        },
+        {
+            "_id": "Readings.fanSpeed",
+            "type": "state",
+            "common": {
+                "name": "Fan speed",
+                "type": "number",
+                "role": "level",
+                "read": true,
+                "write": false,
+                "min": 0,
+                "max": 8,
+                "desc": "Fan speed is discretely indicated by a level between 1 and 8",
+                "custom": {
+                    "fieldCodes": [
+                        "0x29"
+                    ],
+                    "encoding": "fanSpeed"
+                }
+            }
+        },
+        {
+            "_id": "Readings.humidity",
+            "type": "state",
+            "common": {
+                "name": "Current relative humidity",
+                "type": "number",
+                "role": "value.humidity",
+                "read": true,
+                "write": false,
+                "unit": "%",
+                "desc": "",
+                "custom": {
+                    "fieldCodes": [
+                        "0x2A"
+                    ],
+                    "encoding": "humidity"
+                }
+            }
+        },
+        {
+            "_id": "Readings.co2Level",
+            "type": "state",
+            "common": {
+                "name": "Current level of CO2",
+                "type": "number",
+                "role": "level.co2",
+                "read": true,
+                "write": false,
+                "unit": "%",
+                "desc": "Last measured amount of CO2",
+                "custom": {
+                    "fieldCodes": [
+                        "0x2B",
+                        "0x2C"
+                    ]
+                }
+            }
+        },
+        {
+            "_id": "Readings.humiditySensor1",
+            "type": "state",
+            "common": {
+                "name": "%RH from sensor 1",
+                "type": "number",
+                "role": "value.humidity",
+                "read": true,
+                "write": false,
+                "unit": "%",
+                "desc": "Percentage of relative humidity from sensor 1",
+                "custom": {
+                    "fieldCodes": [
+                        "0x2F"
+                    ],
+                    "encoding": "humidity"
+                }
+            }
+        },
+        {
+            "_id": "Readings.humiditySensor2",
+            "type": "state",
+            "common": {
+                "name": "%RH from sensor 2",
+                "type": "number",
+                "role": "value.humidity",
+                "read": true,
+                "write": false,
+                "unit": "%",
+                "desc": "Percentage of relative humidity from sensor 2",
+                "custom": {
+                    "fieldCodes": [
+                        "0x30"
+                    ],
+                    "encoding": "humidity"
+                }
+            }
+        },
+        {
+            "_id": "Readings.outsideTemperature",
+            "type": "state",
+            "common": {
+                "name": "Outside temperature",
+                "type": "number",
+                "role": "value.temperature",
+                "read": true,
+                "write": false,
+                "unit": "°C",
+                "desc": "Measured temperature from outside air duct",
+                "custom": {
+                    "fieldCodes": [
+                        "0x32"
+                    ],
+                    "encoding": "temperature"
+                }
+            }
+        },
+        {
+            "_id": "Readings.exhaustTemperature",
+            "type": "state",
+            "common": {
+                "name": "Exhaust temperature",
+                "type": "number",
+                "role": "value.temperature",
+                "read": true,
+                "write": false,
+                "unit": "°C",
+                "desc": "Measured temperature from exhaust air duct",
+                "custom": {
+                    "fieldCodes": [
+                        "0x33"
+                    ],
+                    "encoding": "temperature"
+                }
+            }
+        },
+        {
+            "_id": "Readings.insideTemperature",
+            "type": "state",
+            "common": {
+                "name": "Inside temperature",
+                "type": "number",
+                "role": "value.temperature",
+                "read": true,
+                "write": false,
+                "unit": "°C",
+                "desc": "Measured temperature from inside air duct",
+                "custom": {
+                    "fieldCodes": [
+                        "0x34"
+                    ],
+                    "encoding": "temperature"
+                }
+            }
+        },
+        {
+            "_id": "Readings.incomingTemperature",
+            "type": "state",
+            "common": {
+                "name": "Incoming temperature",
+                "type": "number",
+                "role": "value.temperature",
+                "read": true,
+                "write": false,
+                "unit": "°C",
+                "desc": "Measured temperature from incoming air duct",
+                "custom": {
+                    "fieldCodes": [
+                        "0x35"
+                    ],
+                    "encoding": "temperature"
+                }
+            }
+        }
+    ]
 }

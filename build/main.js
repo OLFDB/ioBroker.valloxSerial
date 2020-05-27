@@ -95,6 +95,7 @@ class ValloxSerial extends utils.Adapter {
                 if (DatagramUtils_1.DatagramUtils.decodeAddressToControlUnit(data[0]) == "MainUnit") {
                     let mappings = this.getDatagramMappingsByRequestCode(data[2]);
                     for (let mapping of mappings) {
+                        this.logEventHandlers(`mappings <----------------------------------`);
                         let objectId = mapping.id;
                         let reading = (!!mapping.fieldBitPattern) ?
                             mapping.encoding(data[3], mapping.fieldBitPattern) :
@@ -103,10 +104,13 @@ class ValloxSerial extends utils.Adapter {
                             this.log.info(`Reading (code: ${DatagramUtils_1.DatagramUtils.toHexString(data[2], true)}, val: ${data[3]}) => to Object ${objectId}. Encoded value: ${reading}.`);
                         }
                         try {
-                            let stateChange = yield this.setStateChangedAsync(objectId, reading, true);
-                            let stateChangeString = JSON.stringify(stateChange);
-                            if (this.config.logAllReadingsForStateChange) {
-                                this.log.info(`Object ${objectId} state changed to ${stateChangeString}`);
+                            //Set the state only for Readings
+                            if(objectId.split('.')[0] != "Commands") {
+                                let stateChange = yield this.setStateChangedAsync(objectId, reading, true);
+                                let stateChangeString = JSON.stringify(stateChange);
+                                if (this.config.logAllReadingsForStateChange) {
+                                    this.log.info(`Object ${objectId} state changed to ${stateChangeString}`);
+                                }
                             }
                         }
                         catch (err) {
@@ -142,29 +146,35 @@ class ValloxSerial extends utils.Adapter {
      */
     onStateChange(id, state) {
         this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state)}) called.`);
+
         if (state) {
+            this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state)}) called.====================================`);
             if (this.isCommand(state)) {
+                this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state.val)}) called.====================================`);
                 // The state was changed
                 this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                 // TODO: Do it right. This is just a dummy implementation
                 let datagram = [0x01,
                     DatagramUtils_1.DatagramUtils.encodeControlUnitToAddress(this.config.controlUnitAddress),
                     0x11,
-                    this.getCommandFieldCode(id),
+                    parseInt(this.getCommandFieldCode(id),16),
                     0xFF,
                     0xFF]; // placeholder for checksum
                 if (state.val >= 0 && state.val <= 8) {
-                    datagram[4] == DatagramUtils_1.DatagramUtils.encodeFanSpeed(state.val);
+                    datagram[4] = DatagramUtils_1.DatagramUtils.encodeFanSpeed(state.val);
                     DatagramUtils_1.DatagramUtils.addChecksum(datagram);
                     DatagramUtils_1.DatagramUtils.toHexStringDatagram(datagram);
+
+                    this.logEventHandlers(`datagram: ${datagram}`);
+
                     // TODO: Uncomment after debugging
-                    /*this.serialPort.write(datagram, (error, bytesWritten) => {
+                    this.serialPort.write(datagram, (error, bytesWritten) => {
                         if (!!error) {
-                            this.log.error(`ERROR WHEN WRITING TO SERIAL PORT: ${error}`);
+                            this.logEventHandlers(`ERROR WHEN WRITING TO SERIAL PORT: ${error}`);
                         } else {
-                            this.log.debug(`Datagram ${this.toHexStringDatagram(datagram)} successfully sent.`);
+                            this.logEventHandlers(`Datagram ${this.toHexStringDatagram(datagram)} successfully sent.`);
                         }
-                    });*/
+                    });
                 }
             }
         }

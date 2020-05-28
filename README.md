@@ -123,8 +123,9 @@ The module folder contains a shell script `start-remote-debugging.sh` that start
 
 ## Changelog
 ### 0.0.2 (2020-05-27)
-* news
-
+* enabled writing for fanspeed
+* prevented writing of state for command objects
+* logging on debug level only
  
 ### 0.0.1
 * (mld18) initial release

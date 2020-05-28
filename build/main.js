@@ -77,7 +77,7 @@ class ValloxSerial extends utils.Adapter {
             this.logEventHandlers("onUnload() called.");
             this.serialPort.pause();
             this.serialPort.close();
-            this.log.info("cleaned everything up...");
+            this.log.debug("cleaned everything up...");
             callback();
         }
         catch (e) {
@@ -101,7 +101,7 @@ class ValloxSerial extends utils.Adapter {
                             mapping.encoding(data[3], mapping.fieldBitPattern) :
                             mapping.encoding(data[3]);
                         if (this.config.logAllReadingsForStateChange) {
-                            this.log.info(`Reading (code: ${DatagramUtils_1.DatagramUtils.toHexString(data[2], true)}, val: ${data[3]}) => to Object ${objectId}. Encoded value: ${reading}.`);
+                            this.log.debug(`Reading (code: ${DatagramUtils_1.DatagramUtils.toHexString(data[2], true)}, val: ${data[3]}) => to Object ${objectId}. Encoded value: ${reading}.`);
                         }
                         try {
                             //Set the state only for Readings
@@ -109,12 +109,12 @@ class ValloxSerial extends utils.Adapter {
                                 let stateChange = yield this.setStateChangedAsync(objectId, reading, true);
                                 let stateChangeString = JSON.stringify(stateChange);
                                 if (this.config.logAllReadingsForStateChange) {
-                                    this.log.info(`Object ${objectId} state changed to ${stateChangeString}`);
+                                    this.log.debug(`Object ${objectId} state changed to ${stateChangeString}`);
                                 }
                             }
                         }
                         catch (err) {
-                            this.log.info(`Unable to change state of ${objectId}: ${err}`);
+                            this.log.debug(`Unable to change state of ${objectId}: ${err}`);
                         }
                     }
                     if (mappings.length == 0) {
@@ -134,11 +134,11 @@ class ValloxSerial extends utils.Adapter {
         this.logEventHandlers(`onObjectChange(id: ${id}, obj: ${JSON.stringify(obj)}) called.`);
         if (obj) {
             // The object was changed
-            this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
+            this.log.debug(`object ${id} changed: ${JSON.stringify(obj)}`);
         }
         else {
             // The object was deleted
-            this.log.info(`object ${id} deleted`);
+            this.log.debug(`object ${id} deleted`);
         }
     }
     /**
@@ -152,7 +152,7 @@ class ValloxSerial extends utils.Adapter {
             if (this.isCommand(state)) {
                 this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state.val)}) called.====================================`);
                 // The state was changed
-                this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+                this.log.debug(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
                 // TODO: Do it right. This is just a dummy implementation
                 let datagram = [0x01,
                     DatagramUtils_1.DatagramUtils.encodeControlUnitToAddress(this.config.controlUnitAddress),
@@ -180,7 +180,7 @@ class ValloxSerial extends utils.Adapter {
         }
         else {
             // The state was deleted
-            this.log.info(`state ${id} deleted`);
+            this.log.debug(`state ${id} deleted`);
         }
     }
     // ////////////////////////////////////////////////////////////////
@@ -231,7 +231,7 @@ class ValloxSerial extends utils.Adapter {
     logDatagram(datagramString) {
         let ll = this.config.loglevelDatagrams;
         let logFunc = (ll == "Silly") ?
-            this.log.silly : (ll = "Debug") ?
+            this.log.silly : (ll == "Debug") ?
             this.log.debug : (ll == "Info") ?
             this.log.info :
             undefined;
@@ -241,12 +241,12 @@ class ValloxSerial extends utils.Adapter {
     }
     logSerialPortEvent(msg) {
         if (this.config.logSerialPortEvents) {
-            this.log.info(msg);
+            this.log.debug(msg);
         }
     }
     logEventHandlers(msg) {
         if (this.config.logEventHandlers) {
-            this.log.info(msg);
+            this.log.debug(msg);
         }
     }
 }

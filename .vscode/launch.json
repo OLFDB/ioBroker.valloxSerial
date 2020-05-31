@@ -12,7 +12,7 @@
             "name": "Attach to remote ioBroker-Module",
             /* TODO: change this to your debugging target machine.
                May be an IP address or a DNS name. */
-            "address": "iobroker-raspi", 
+            "address": "systemair", 
             "port": 9229,
 
             /* set trace to true if you're having problems to get the remote

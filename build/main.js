@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const utils = require("@iobroker/adapter-core");
 const SerialPort = require("serialport");
+var ByteLength = require('@serialport/parser-byte-length');
 const DatagramUtils_1 = require("./DatagramUtils");
 class ValloxSerial extends utils.Adapter {
     /**
@@ -21,6 +22,8 @@ class ValloxSerial extends utils.Adapter {
     constructor(options = {}) {
         super(Object.assign(Object.assign({}, options), { name: "valloxserial" }));
         this.datagramStateMap = [];
+        // set serial out of synch
+        this.serialinsync = false;
         this.on("ready", this.onReady.bind(this));
         this.on("objectChange", this.onObjectChange.bind(this));
         this.on("stateChange", this.onStateChange.bind(this));
@@ -77,7 +80,7 @@ class ValloxSerial extends utils.Adapter {
             this.logEventHandlers("onUnload() called.");
             this.serialPort.pause();
             this.serialPort.close();
-            this.log.debug("cleaned everything up...");
+            this.log.info("cleaned everything up...");
             callback();
         }
         catch (e) {
@@ -86,44 +89,95 @@ class ValloxSerial extends utils.Adapter {
     }
     onDataReady(data) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (this.serialinsync == false) {
+                this.log.info(`Serial out of synch.`);
+                if (DatagramUtils_1.DatagramUtils.hasRightChecksum(data)) {
+                    this.serialinsync = true;
+                    this.serialPort.pause();
+                    this.serialPort.close();
+                    this.serialPort = new SerialPort(this.config.serialPortDevice, {
+                        autoOpen: true,
+                        baudRate: 9600,
+                        dataBits: 8,
+                        parity: 'none',
+                        stopBits: 1
+                    });
+                    this.bindPortEvents();
+                    this.datagramSource = this.serialPort.pipe(new ByteLength({ length: 6 }));
+                    this.datagramSource.on("data", this.onDataReady.bind(this));
+                    this.log.info(`Serial in synch.`);
+                }
+                // discard everything until in synch
+                return;
+            }
             let datagramString = DatagramUtils_1.DatagramUtils.toHexStringDatagram(data);
             this.logEventHandlers(`onDataReady([${datagramString}]) called.`);
             this.logDatagram(datagramString);
-            // check length and checksum
-            if (data.length == 5 && DatagramUtils_1.DatagramUtils.hasRightChecksum(data)) {
-                // only look at datagrams that are sent by the main unit
-                if (DatagramUtils_1.DatagramUtils.decodeAddressToControlUnit(data[0]) == "MainUnit") {
-                    let mappings = this.getDatagramMappingsByRequestCode(data[2]);
-                    for (let mapping of mappings) {
-                        this.logEventHandlers(`mappings <----------------------------------`);
-                        let objectId = mapping.id;
-                        let reading = (!!mapping.fieldBitPattern) ?
-                            mapping.encoding(data[3], mapping.fieldBitPattern) :
-                            mapping.encoding(data[3]);
-                        if (this.config.logAllReadingsForStateChange) {
-                            this.log.debug(`Reading (code: ${DatagramUtils_1.DatagramUtils.toHexString(data[2], true)}, val: ${data[3]}) => to Object ${objectId}. Encoded value: ${reading}.`);
-                        }
-                        try {
-                            //Set the state only for Readings
-                            if(objectId.split('.')[0] != "Commands") {
-                                let stateChange = yield this.setStateChangedAsync(objectId, reading, true);
-                                let stateChangeString = JSON.stringify(stateChange);
+            // check if still in synch 
+            if (data[0] == 1) {
+                //to keep existing code working: shift data by one byte 
+                data[0] = data[1];
+                data[1] = data[2];
+                data[2] = data[3];
+                data[3] = data[4];
+                data[4] = data[5];
+                // check checksum
+                if (DatagramUtils_1.DatagramUtils.hasRightChecksum(data)) {
+                    // only look at datagrams that are sent by the main unit
+                    if (DatagramUtils_1.DatagramUtils.decodeAddressToControlUnit(data[0]) == "MainUnit") {
+                        let mappings = this.getDatagramMappingsByRequestCode(data[2]);
+                        for (let mapping of mappings) {
+                            let objectId = mapping.id;
+                            let reading = (!!mapping.fieldBitPattern) ?
+                                mapping.encoding(data[3], mapping.fieldBitPattern) :
+                                mapping.encoding(data[3]);
+                            if (this.config.logAllReadingsForStateChange) {
+                                this.log.info(`Reading (code: ${DatagramUtils_1.DatagramUtils.toHexString(data[2], true)}, val: ${data[3]}) => to Object ${objectId}. Encoded value: ${reading}.`);
+                            }
+                            try {
                                 if (this.config.logAllReadingsForStateChange) {
-                                    this.log.debug(`Object ${objectId} state changed to ${stateChangeString}`);
+                                    this.log.info(`objectid: ${objectId}`);
+                                }
+                                if (objectId.split('.')[0] != "Commands") { // Update only Readings
+                                    let stateChange = yield this.setStateChangedAsync(objectId, reading, true);
+                                    let stateChangeString = JSON.stringify(stateChange);
+                                    if (this.config.logAllReadingsForStateChange) {
+                                        this.log.info(`Object ${objectId} state changed to ${stateChangeString}`);
+                                    }
                                 }
                             }
+                            catch (err) {
+                                this.log.info(`Unable to change state of ${objectId}: ${err}`);
+                            }
                         }
-                        catch (err) {
-                            this.log.debug(`Unable to change state of ${objectId}: ${err}`);
+                        if (mappings.length == 0) {
+                            this.log.warn("No mapping found for code " + DatagramUtils_1.DatagramUtils.toHexString(data[2], true) + `. Datagram was ${datagramString}`);
                         }
-                    }
-                    if (mappings.length == 0) {
-                        this.log.warn("No mapping found for code " + DatagramUtils_1.DatagramUtils.toHexString(data[2], true) + `. Datagram was ${datagramString}`);
                     }
                 }
+                else {
+                    this.log.warn(`Checksum of datagram ${datagramString} is not correct.`);
+                }
             }
-            else {
-                this.log.warn(`Checksum of datagram ${datagramString} is not correct.`);
+            else { // port out of synch
+                this.serialinsync = false;
+                // switch to delimiter parser
+                this.serialPort.pause();
+                this.serialPort.close();
+                this.serialPort = new SerialPort(this.config.serialPortDevice, {
+                    autoOpen: true,
+                    baudRate: 9600,
+                    dataBits: 8,
+                    parity: 'none',
+                    stopBits: 1
+                });
+                this.bindPortEvents();
+                // initialize and pipe serial port input through DelimiterParser
+                this.datagramSource = this.serialPort.pipe(new SerialPort.parsers.Delimiter(
+                /* Datagrams start with a 0x01 byte, so we use a
+                  Delimiter parser for separating datagrams */
+                { delimiter: [0x1] }));
+                this.datagramSource.on("data", this.onDataReady.bind(this));
             }
         });
     }
@@ -134,11 +188,11 @@ class ValloxSerial extends utils.Adapter {
         this.logEventHandlers(`onObjectChange(id: ${id}, obj: ${JSON.stringify(obj)}) called.`);
         if (obj) {
             // The object was changed
-            this.log.debug(`object ${id} changed: ${JSON.stringify(obj)}`);
+            this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
         }
         else {
             // The object was deleted
-            this.log.debug(`object ${id} deleted`);
+            this.log.info(`object ${id} deleted`);
         }
     }
     /**
@@ -146,33 +200,26 @@ class ValloxSerial extends utils.Adapter {
      */
     onStateChange(id, state) {
         this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state)}) called.`);
-
-        if (state) {
-            this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state)}) called.====================================`);
+        if (state && state.val) {
             if (this.isCommand(state)) {
-                this.logEventHandlers(`onStateChange(id: ${id}, state: ${JSON.stringify(state.val)}) called.====================================`);
                 // The state was changed
-                this.log.debug(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-                // TODO: Do it right. This is just a dummy implementation
-                let datagram = [0x01,
-                    DatagramUtils_1.DatagramUtils.encodeControlUnitToAddress(this.config.controlUnitAddress),
+                this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
+                let datagram = [0x01, // Domain, always 0x01
+                    DatagramUtils_1.DatagramUtils.encodeControlUnitToAddress(this.config.controlUnitAddress), // act as panel
                     0x11,
-                    parseInt(this.getCommandFieldCode(id),16),
+                    this.getCommandFieldCode(id),
                     0xFF,
                     0xFF]; // placeholder for checksum
                 if (state.val >= 0 && state.val <= 8) {
-                    datagram[4] = DatagramUtils_1.DatagramUtils.encodeFanSpeed(state.val);
+                    datagram[4] = DatagramUtils_1.DatagramUtils.encodeFanSpeed(+state.val);
                     DatagramUtils_1.DatagramUtils.addChecksum(datagram);
                     DatagramUtils_1.DatagramUtils.toHexStringDatagram(datagram);
-
-                    this.logEventHandlers(`datagram: ${datagram}`);
-
-                    // TODO: Uncomment after debugging
                     this.serialPort.write(datagram, (error, bytesWritten) => {
                         if (!!error) {
-                            this.logEventHandlers(`ERROR WHEN WRITING TO SERIAL PORT: ${error}`);
-                        } else {
-                            this.logEventHandlers(`Datagram ${this.toHexStringDatagram(datagram)} successfully sent.`);
+                            this.log.error(`ERROR WHEN WRITING TO SERIAL PORT: ${error}`);
+                        }
+                        else {
+                            this.log.debug(`Datagram ${DatagramUtils_1.DatagramUtils.toHexStringDatagram(datagram)} successfully sent.`);
                         }
                     });
                 }
@@ -180,7 +227,7 @@ class ValloxSerial extends utils.Adapter {
         }
         else {
             // The state was deleted
-            this.log.debug(`state ${id} deleted`);
+            this.log.info(`state ${id} deleted`);
         }
     }
     // ////////////////////////////////////////////////////////////////
@@ -217,7 +264,7 @@ class ValloxSerial extends utils.Adapter {
         let result = 0x00; // invalid field code
         for (let obj of this.ioPack.instanceObjects) {
             if (obj.type == "state" && obj._id == objectId) {
-                return result = obj.common.custom.fieldCodes[0];
+                return result = parseInt(obj.common.custom.fieldCodes[0]);
             }
         }
         return result;
@@ -241,12 +288,12 @@ class ValloxSerial extends utils.Adapter {
     }
     logSerialPortEvent(msg) {
         if (this.config.logSerialPortEvents) {
-            this.log.debug(msg);
+            this.log.info(msg);
         }
     }
     logEventHandlers(msg) {
         if (this.config.logEventHandlers) {
-            this.log.debug(msg);
+            this.log.info(msg);
         }
     }
 }

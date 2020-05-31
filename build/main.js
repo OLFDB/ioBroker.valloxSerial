@@ -36,6 +36,7 @@ class ValloxSerial extends utils.Adapter {
     bindPortEvents() {
         this.serialPort.on('error', (err) => {
             this.log.error(`PROBLEM WITH SERIAL PORT: ${err.message}`);
+            this.restart();
         });
         this.serialPort.on('open', () => {
             this.logSerialPortEvent("Serial port opened");

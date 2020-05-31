@@ -10,8 +10,8 @@ then
   exit 1;
 fi
 
-
-IP_ADDRESS=$(ip route get 8.8.8.8 | awk '{print $NF;exit}')
+#based on https://www.unix.com/shell-programming-and-scripting/148155-find-field-number.html
+IP_ADDRESS=$(ip route get 8.8.8.8 | awk '{for(i=1;i<=NF;i++)if($i==v)print $(i+1)}' v=src)
 DEBUG_PORT=9229
 
 IOBROKER_ROOT=/opt/iobroker
@@ -53,7 +53,11 @@ REL_PATH_TO_MAIN_JS=$(find . -name 'main.js' -exec echo "{}"  \; | head -n 1 | s
 echo "Relative path to main.js of module: $REL_PATH_TO_MODULE/$REL_PATH_TO_MAIN_JS";
 
 cd $IOBROKER_ROOT
-node --inspect-brk=$IP_ADDRESS:$DEBUG_PORT $REL_PATH_TO_MODULE/$REL_PATH_TO_MAIN_JS --debug
+#non Raspberry Pi OS
+#node --inspect-brk=$IP_ADDRESS:$DEBUG_PORT $REL_PATH_TO_MODULE/$REL_PATH_TO_MAIN_JS --debug
+
+#Raspberry Pi OS
+node --inspect-brk=$IP_ADDRESS:$DEBUG_PORT $REL_PATH_TO_MODULE/$REL_PATH_TO_MAIN_JS --force --logs
 
 # change back to old working directory
 cd $PWD
